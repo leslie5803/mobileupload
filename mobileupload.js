@@ -4,6 +4,11 @@
     var defaultOps = {
         url: null,
         quality: 40,
+        resize: false,
+        scale:{
+            maxWidth: 640,
+            maxHeight: null
+        },
         output: null,
         formData: {},
         uploadProgress: function () {
@@ -61,12 +66,27 @@
 
         this.compress = function (source_img_obj, quality, outputType) {
 
-            var cvs    = doc.createElement('canvas');
+            var cvs     = doc.createElement('canvas'),
+                nWidth  = source_img_obj.naturalWidth,
+                nHeight = source_img_obj.naturalHeight,
+                sWidth  = self.defaults.scale.maxWidth,
+                sHeight = self.defaults.scale.maxHeight,
+                scale   = 1;
 
-            cvs.width  = source_img_obj.naturalWidth;
-            cvs.height = source_img_obj.naturalHeight;
+		if(self.defaults.resize){
+                    if(sWidth && sHeight){
+                        scale = Math.min(sWidth/nWidth, sHeight/nHeight);
+                    }else if (sWidth && nWidth >= sWidth && !sHeight){
+                        scale = sWidth/nWidth;
+                    }else if (!sWidth && nHeight >= sHeight && sHeight){
+                        scale = sHeight/nHeight;
+                    }
+                }
 
-            var ctx              = cvs.getContext("2d").drawImage(source_img_obj, 0, 0),
+            cvs.width  = nWidth * scale;
+            cvs.height = nHeight * scale;
+
+            var ctx              = cvs.getContext("2d").drawImage(source_img_obj, 0, 0, cvs.width, cvs.height),
                 newImageData     = cvs.toDataURL(outputType, quality/100),
                 result_image_obj = new Image();
 
